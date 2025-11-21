@@ -20,9 +20,18 @@ export default function Financing({ linkedAccounts = [] }) {
   const utilization = (usedCredit / calculatedLimit) * 100;
   const interestRate = 2.5; // Monthly
 
-  const buyingPower = availableCredit * leverage;
+    const buyingPower = availableCredit * leverage;
 
-  return (
+    // Next collection date is dynamic: today's date + 4 days
+    const getNextCollectionDate = (days = 4) => {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const nextCollectionDateStr = getNextCollectionDate(4);
+
+    return (
     <div className="space-y-6">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
@@ -138,7 +147,7 @@ export default function Financing({ linkedAccounts = [] }) {
                 <div className="flex flex-col sm:flex-row gap-6">
                     <div className="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <p className="text-xs text-gray-500 uppercase font-bold mb-1">Next Collection</p>
-                        <p className="text-xl font-bold text-gray-900">Nov 25, 2025</p>
+                        <p className="text-xl font-bold text-gray-900">{nextCollectionDateStr}</p>
                         <p className="text-sm text-gray-600 mt-1">Amount: ₦42,500</p>
                     </div>
                     
