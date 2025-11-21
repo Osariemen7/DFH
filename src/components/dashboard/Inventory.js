@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Camera, FileText, CheckCircle, Loader2, Plus } from "lucide-react";
 
-export default function Inventory() {
+export default function Inventory({ setActiveTab, setSelectedProduct }) {
   const [mode, setMode] = useState("list"); // list | manual | upload | scan
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -19,6 +19,11 @@ export default function Inventory() {
         setMode("list");
       }, 2000);
     }, 2500);
+  };
+
+  const handleViewMarketplace = (item) => {
+    setSelectedProduct(item);
+    setActiveTab("marketplace");
   };
 
   const InventoryList = () => (
@@ -53,30 +58,43 @@ export default function Inventory() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
-        <table className="w-full text-sm text-left min-w-[500px]">
+        <table className="w-full text-sm text-left min-w-[700px]">
           <thead className="bg-gray-50 text-gray-500 font-medium">
             <tr>
               <th className="p-4">Product</th>
-              <th className="p-4">Stock</th>
+              <th className="p-4">Stock Left</th>
+              <th className="p-4">Sold (Since Restock)</th>
+              <th className="p-4">Price/Pack</th>
               <th className="p-4">Status</th>
+              <th className="p-4">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {[
-              { name: "Panadol Extra", stock: 45, status: "Good" },
-              { name: "Artemether/Lumefantrine", stock: 5, status: "Low" },
-              { name: "Amoxicillin", stock: 120, status: "Good" },
-              { name: "Vitamin C", stock: 8, status: "Low" },
+              { name: "Panadol Extra", stock: 45, sold: 155, price: 1450, status: "Good" },
+              { name: "Artemether/Lumefantrine", stock: 5, sold: 95, price: 2100, status: "Low" },
+              { name: "Amoxicillin", stock: 120, sold: 80, price: 3500, status: "Good" },
+              { name: "Vitamin C", stock: 8, sold: 242, price: 800, status: "Low" },
             ].map((item, i) => (
               <tr key={i} className="hover:bg-gray-50">
                 <td className="p-4 font-medium text-gray-800">{item.name}</td>
                 <td className="p-4 text-gray-600">{item.stock}</td>
+                <td className="p-4 text-gray-600">{item.sold}</td>
+                <td className="p-4 text-gray-600">₦{item.price.toLocaleString()}</td>
                 <td className="p-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                     item.status === "Low" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
                   }`}>
                     {item.status}
                   </span>
+                </td>
+                <td className="p-4">
+                  <button 
+                    onClick={() => handleViewMarketplace(item)}
+                    className="text-green-600 hover:text-green-700 font-medium text-xs border border-green-200 hover:border-green-300 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    View Market
+                  </button>
                 </td>
               </tr>
             ))}

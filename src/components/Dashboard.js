@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Package, TrendingUp, Wallet, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Wallet, LogOut, Menu, X } from "lucide-react";
 import Overview from "./dashboard/Overview";
 import Inventory from "./dashboard/Inventory";
 import Marketplace from "./dashboard/Marketplace";
@@ -10,6 +10,15 @@ import Financing from "./dashboard/Financing";
 
 export default function Dashboard({ onLogout }) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [marginRatio, setMarginRatio] = useState(0.3); // Default 30% equity contribution
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Shared financial data
+  const linkedAccounts = [
+    { id: "zenith", bank: "Zenith Bank", account: "**** 4521", balance: 2450000, inflow: 12500000, averageBalance: 1800000 },
+    { id: "gtb", bank: "GTBank", account: "**** 8892", balance: 850000, inflow: 4200000, averageBalance: 650000 },
+  ];
 
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -21,18 +30,49 @@ export default function Dashboard({ onLogout }) {
   const renderContent = () => {
     switch (activeTab) {
       case "overview": return <Overview setActiveTab={setActiveTab} />;
-      case "inventory": return <Inventory />;
-      case "marketplace": return <Marketplace />;
-      case "financing": return <Financing />;
+      case "inventory": return <Inventory setActiveTab={setActiveTab} setSelectedProduct={setSelectedProduct} />;
+      case "marketplace": return <Marketplace selectedProduct={selectedProduct} linkedAccounts={linkedAccounts} marginRatio={marginRatio} />;
+      case "financing": return <Financing linkedAccounts={linkedAccounts} marginRatio={marginRatio} setMarginRatio={setMarginRatio} />;
       default: return <Overview />;
     }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto min-h-screen md:min-h-0 md:h-[800px] bg-white/90 backdrop-blur-xl rounded-none md:rounded-3xl shadow-2xl border-x-0 md:border border-white/20 overflow-visible md:overflow-hidden flex flex-col md:flex-row">
+    <div className="w-full h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center z-30 shrink-0">
+         <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-green-600/20">
+                D
+            </div>
+            <div>
+                <h2 className="font-bold text-gray-800 text-sm">DFH Terminal</h2>
+            </div>
+         </div>
+         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+         </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+            />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar Navigation */}
-      <div className="w-full md:w-64 bg-gray-50/50 border-b md:border-b-0 md:border-r border-gray-100 p-4 md:p-6 flex flex-col shrink-0">
-        <div className="mb-6 md:mb-8 flex items-center gap-3">
+      <div className={`
+        fixed md:static inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 p-6 flex flex-col transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
+        <div className="mb-8 flex items-center gap-3">
           <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-green-600/20">
             D
           </div>
@@ -42,15 +82,18 @@ export default function Dashboard({ onLogout }) {
           </div>
         </div>
 
-        <nav className="flex-1 grid grid-cols-2 gap-2 md:block md:space-y-2">
+        <nav className="flex-1 space-y-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsMobileMenuOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id
-                  ? "bg-white text-green-600 shadow-md shadow-gray-100"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  ? "bg-green-50 text-green-600 shadow-sm border border-green-100"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               }`}
             >
               <tab.icon className="w-5 h-5" />
@@ -61,7 +104,7 @@ export default function Dashboard({ onLogout }) {
 
         <button 
           onClick={onLogout}
-          className="mt-4 md:mt-auto flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+          className="mt-auto flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-colors"
         >
           <LogOut className="w-5 h-5" />
           Logout
@@ -69,19 +112,21 @@ export default function Dashboard({ onLogout }) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 bg-white/50 p-4 md:p-6 overflow-visible md:overflow-y-auto relative">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
-          >
-            {renderContent()}
-          </motion.div>
-        </AnimatePresence>
+      <div className="flex-1 bg-gray-50 p-4 md:p-8 overflow-y-auto relative w-full">
+        <div className="max-w-7xl mx-auto h-full">
+            <AnimatePresence mode="wait">
+            <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+            >
+                {renderContent()}
+            </motion.div>
+            </AnimatePresence>
+        </div>
       </div>
     </div>
   );
